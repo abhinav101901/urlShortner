@@ -49,7 +49,9 @@ const redirectUrl=async function(req,res){
     if(!checkUrlCode) return res.status(404).send({status:false,messgae:"Url Code not found"})
 
     let getUrl= await UrlModel.findOne({urlCode:urlCode}).select({longUrl:1,_id:0})
-    return res.status(200).send({status:true,data:getUrl})
+    let Url = getUrl.longUrl
+
+    return res.status(302).redirect(Url)
 }
 
 
