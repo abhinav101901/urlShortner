@@ -1,11 +1,12 @@
 const express = require('express')
+//import express from "express";
 const mongoose = require('mongoose')
-const route = require('../routes/route')
+const route = require('./routes/route')
 const app = express()
 
 app.use(express.json())
 
-mongoose.connect(" ",{
+mongoose.connect("mongodb+srv://Bhavi:Bhavi123@cluster1.yydegcy.mongodb.net/project3group6Database",{
     useNewUrlParser:true
 })
 .then(()=> console.log("MongoDB is Connected"))
