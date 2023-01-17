@@ -10,6 +10,8 @@ const createShortUrl=async function(req,res){
 
     if(Object.keys(data).length==0) return res.status(400).send({status:false,message:"Provide data in body"})
     if(!data.longUrl) return res.status(400).send({status:false,message:"Provide Long URL"})
+//btana h
+    if (typeof longUrl!="string") return res.status(400).send({ status: false, message: "Long url is not String" });
 
     let urlfound= false;
     await axios.get(data.longUrl)
@@ -22,6 +24,7 @@ const createShortUrl=async function(req,res){
     if(urlfound==false) return res.status(400).send({status:false,message:"Invalid long Url"})
 
     let longUrlPresent = await UrlModel.findOne({longUrl:data.longUrl}).select({_id:0,createdAt:0,updatedAt:0,__v:0})
+    //batana hai
     if(longUrlPresent) return res.status(400).send({status:false,data:longUrlPresent})
 
     let urlCode= shortid.generate().toLowerCase();
@@ -37,7 +40,9 @@ const createShortUrl=async function(req,res){
     obj.urlCode=urlCode;
 
     let created = await UrlModel.create(obj)
-    return res.status(201).send({status:true,data:created})
+    //btana h
+    let result= await UrlModel.findById(created._id).select({longUrl:1,shortUrl:1,urlCode:1,_id:0})
+    return res.status(201).send({status:true,data:result})
 }
     catch(error){
         return res.status(500).send({status:false,Error:error.message})
