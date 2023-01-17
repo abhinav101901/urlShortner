@@ -10,7 +10,7 @@ const createShortUrl=async function(req,res){
 
     if(Object.keys(data).length==0) return res.status(400).send({status:false,message:"Provide data in body"})
     if(!data.longUrl) return res.status(400).send({status:false,message:"Provide Long URL"})
-//btana h
+
     if (typeof longUrl!="string") return res.status(400).send({ status: false, message: "Long url is not String" });
 
     let urlfound= false;
@@ -24,23 +24,20 @@ const createShortUrl=async function(req,res){
     if(urlfound==false) return res.status(400).send({status:false,message:"Invalid long Url"})
 
     let longUrlPresent = await UrlModel.findOne({longUrl:data.longUrl}).select({_id:0,createdAt:0,updatedAt:0,__v:0})
-    //batana hai
-    if(longUrlPresent) return res.status(400).send({status:false,data:longUrlPresent})
+    if(longUrlPresent) return res.status(200).send({status:true,data:longUrlPresent})
 
-    let urlCode= shortid.generate().toLowerCase();
+    let urlCode= shortid.generate().toLowerCase();//fdjgfdnsg7 --->fDjGfDnsg7-->fdjgfdnsg7
+
     let urlCodePresent = await UrlModel.findOne({urlCode:urlCode})
     if(urlCodePresent) return res.status(400).send({status:false,message:"Url code is already present"})
 
     let shortUrl= "http://localhost:3000/"+urlCode;
-    let shortUrlPresent = await UrlModel.findOne({shortUrl:shortUrl})
-    if(shortUrlPresent) return res.status(400).send({status:false,message:"Short Url is already present"})
 
     obj.longUrl=data.longUrl;
     obj.shortUrl=shortUrl;
     obj.urlCode=urlCode;
 
     let created = await UrlModel.create(obj)
-    //btana h
     let result= await UrlModel.findById(created._id).select({longUrl:1,shortUrl:1,urlCode:1,_id:0})
     return res.status(201).send({status:true,data:result})
 }
@@ -61,7 +58,7 @@ const redirectUrl=async function(req,res){
     let checkUrlCode = await UrlModel.findOne({urlCode:urlCode}).select({longUrl:1,_id:0})
     if(!checkUrlCode) return res.status(404).send({status:false,message:"Url Code not found"})
 
-    let Url = checkUrlCode.longUrl
+    let Url = checkUrlCode.longUrl 
 
     return res.status(302).redirect(Url)
 }
