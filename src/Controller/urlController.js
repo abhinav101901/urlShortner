@@ -4,24 +4,27 @@ const axios=require("axios")
 
 //---------------------------------------Creating urlData--------------------------------------------------------
 const createShortUrl=async function(req,res){
+    try{
+        let obj={};
+        let data =req.body;
 
-    let obj={};
-    let data =req.body;
+    if(Object.keys(data).length==0) return res.status(400).send({status:false,message:"Provide data in body"})
+    if(!data.longUrl) return res.status(400).send({status:false,message:"Provide Long URL"})
 
-if(Object.keys(data).length==0) return res.status(400).send({status:false,message:"Provide data in body"})
-if(!data.longUrl) return res.status(400).send({status:false,message:"Provide Long URL"})
+    let urlfound= false;
+    await axios.get(data.longUrl)
+    .then((result)=>{
+        if(result.status==200||result.status==201)
+            urlfound=true;
+    })
+    .catch((error)=>{})
 
-let urlfound= false;
-await axios.get(data.longUrl)
-.then((result)=>{
-    if(result.status==200||result.status==201)
-    urlfound=true;
-})
-.catch((error)=>{})
+    if(urlfound==false) return res.status(400).send({status:false,message:"Invalid long Url"})
 
-if(urlfound==false) return res.status(400).send({status:false,message:"Invalid long Url"})
- 
-    let urlCode= shortid.generate();
+    let longUrlPresent = await UrlModel.findOne({longUrl:data.longUrl}).select({_id:0,createdAt:0,updatedAt:0,__v:0})
+    if(longUrlPresent) return res.status(400).send({status:false,data:longUrlPresent})
+
+    let urlCode= shortid.generate().toLowerCase();
     let urlCodePresent = await UrlModel.findOne({urlCode:urlCode})
     if(urlCodePresent) return res.status(400).send({status:false,message:"Url code is already present"})
 
@@ -36,24 +39,30 @@ if(urlfound==false) return res.status(400).send({status:false,message:"Invalid l
     let created = await UrlModel.create(obj)
     return res.status(201).send({status:true,data:created})
 }
+    catch(error){
+        return res.status(500).send({status:false,Error:error.message})
+    }
+}
 
 //---------------------------------------------- Get urlData -----------------------------------------------------------------------------------
 
 const redirectUrl=async function(req,res){
-    let urlCode=req.params.urlCode;
+    try{
+        let urlCode=req.params.urlCode;
     if(!urlCode) return res.status(400).send({status:false,message:"Please enter the Url Code"})
 
     if(!shortid.isValid(urlCode)) return res.status(400).send({status:false,message:"Please enter correct Url code"})
 
-    let checkUrlCode = await UrlModel.findOne({urlCode:urlCode})
-    if(!checkUrlCode) return res.status(404).send({status:false,messgae:"Url Code not found"})
+    let checkUrlCode = await UrlModel.findOne({urlCode:urlCode}).select({longUrl:1,_id:0})
+    if(!checkUrlCode) return res.status(404).send({status:false,message:"Url Code not found"})
 
-    let getUrl= await UrlModel.findOne({urlCode:urlCode}).select({longUrl:1,_id:0})
-    let Url = getUrl.longUrl
+    let Url = checkUrlCode.longUrl
 
     return res.status(302).redirect(Url)
 }
-
-
+    catch(error){
+        return res.status(500).send({status:false,Error:error.message})
+    }
+}
 
 module.exports={createShortUrl,redirectUrl}
