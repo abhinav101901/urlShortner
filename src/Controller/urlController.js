@@ -11,7 +11,7 @@ const createShortUrl=async function(req,res){
     if(Object.keys(data).length==0) return res.status(400).send({status:false,message:"Provide data in body"})
     if(!data.longUrl) return res.status(400).send({status:false,message:"Provide Long URL"})
 
-    if (typeof longUrl!="string") return res.status(400).send({ status: false, message: "Long url is not String" });
+    if (typeof data.longUrl!=="string") return res.status(400).send({ status: false, message: "Long url is not String" });
 
     let urlfound= false;
     await axios.get(data.longUrl)
@@ -59,8 +59,11 @@ const redirectUrl=async function(req,res){
     if(!checkUrlCode) return res.status(404).send({status:false,message:"Url Code not found"})
 
     let Url = checkUrlCode.longUrl 
+    // h.get('*',function(req,res){  
+    //     res.status(302).redirect(Url)
+    // })
 
-    return res.status(302).redirect(Url)
+    return res.redirect(Url)
 }
     catch(error){
         return res.status(500).send({status:false,Error:error.message})
