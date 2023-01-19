@@ -2,7 +2,8 @@ const UrlModel=require("../model/urlModel");
 const shortid=require("shortid");
 const axios=require("axios")
 const redis = require("redis")
-const {promisify} = require("util")
+const {promisify} = require("util");
+const { arrayBuffer } = require("stream/consumers");
 
 const redisClient = redis.createClient(
     12528,
@@ -42,11 +43,14 @@ const createShortUrl=async function(req,res){
      
     //............check in cache-memory...................
     let cacheData = await GETEX_ASYNC(`${data.longUrl}`)//https://
-    if(cacheData) return res.status(200).send({status:true,data:cacheData})
+    let obj2=JSON.parse(cacheData)
+    if(cacheData) return res.status(200).send({status:true,data:obj2})
 
     //............ Check in DataBase................
     let longUrlPresent = await UrlModel.findOne({longUrl:data.longUrl}).select({_id:0,createdAt:0,updatedAt:0,__v:0})
-    if(longUrlPresent) return res.status(200).send({status:true,data:longUrlPresent})
+    if(longUrlPresent){
+         await SETEX_ASYNC(`${longUrlPresent.longUrl}`, 120, JSON.stringify(longUrlPresent))
+        return res.status(200).send({status:true,data:longUrlPresent})}
 
     //..............Generate....................................
     let urlCode= shortid.generate().toLowerCase();//fdjgfdnsg7 --->fDjGfDnsg7-->fdjgfdnsg7
@@ -105,3 +109,4 @@ const redirectUrl=async function(req,res){
 }
 
 module.exports={createShortUrl,redirectUrl}
+
