@@ -42,7 +42,7 @@ const createShortUrl=async function(req,res){
     if(urlfound==false) return res.status(400).send({status:false,message:"Invalid long Url"})
      
     //............check in cache-memory...................
-    let cacheData = await GETEX_ASYNC(data.longUrl)//https://
+    let cacheData = await GETEX_ASYNC(data.longUrl)
     let obj2=JSON.parse(cacheData)
     if(cacheData) return res.status(200).send({status:true,data:obj2})
 
@@ -53,7 +53,7 @@ const createShortUrl=async function(req,res){
         return res.status(200).send({status:true,data:longUrlPresent})}
 
     //..............Generate....................................
-    let urlCode= shortid.generate().toLowerCase();//fdjgfdnsg7 --->fDjGfDnsg7-->fdjgfdnsg7
+    let urlCode= shortid.generate().toLowerCase();
 
     let urlCodePresent = await UrlModel.findOne({urlCode:urlCode})
     if(urlCodePresent) return res.status(400).send({status:false,message:"Url code is already present"})
@@ -65,21 +65,18 @@ const createShortUrl=async function(req,res){
     obj.urlCode=urlCode;
 
     let created = await UrlModel.create(obj)
-    //.................................................................
 
-    //.........Take data and store in cache-memory....................
-    let result= await UrlModel.findById(created._id).select({longUrl:1,shortUrl:1,urlCode:1,_id:0})
-    await SETEX_ASYNC(created.longUrl, 86400, JSON.stringify(result))
-    //......................................................................
+    //...............Take data and store in cache-memory.......................
+    await SETEX_ASYNC(created.longUrl, 86400, JSON.stringify(obj))
+    //...........................................................................
 
-    return res.status(201).send({status:true,data:result})
-}
-    catch(error){
+    return res.status(201).send({status:true,data:obj})
+}catch(error){
         return res.status(500).send({status:false,Error:error.message})
     }
 }
 
-//---------------------------------------------- Get urlData -----------------------------------------------------------------------------------
+//------------------------------ Get urlData --------------------------------------------------
 
 const redirectUrl=async function(req,res){
     try{
@@ -87,7 +84,7 @@ const redirectUrl=async function(req,res){
 
     if(!shortid.isValid(urlCode)) return res.status(400).send({status:false,message:"Please enter correct Url code"})
     
-    //...............Check UrlCode in cache-memory or Not....................................................................
+    //...............Check UrlCode in cache-memory or Not........................................
     let cacheData = await GETEX_ASYNC(urlCode)
     let obj= JSON.parse(cacheData)
     if(obj) return res.status(302).redirect(obj.longUrl)
@@ -97,8 +94,7 @@ const redirectUrl=async function(req,res){
     if(!checkUrlCode) return res.status(404).send({status:false,message:"Url Code not found"})
      
     let Url = checkUrlCode.longUrl 
-    
-    //...................
+
     await SETEX_ASYNC(urlCode, 86400, JSON.stringify(checkUrlCode))
 
     return res.status(302).redirect(Url)
